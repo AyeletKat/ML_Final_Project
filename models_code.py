@@ -9,6 +9,7 @@
 
 # check and write CNN 
 # get rid of image loading separate functions?
+# add: dimensionality reduction, visualizations, statistics per class, ovetfitting check, data augmentation\masking?
 
 import os
 import numpy as np
