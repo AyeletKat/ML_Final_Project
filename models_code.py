@@ -33,12 +33,14 @@ def img_to_array(img):
 
 # if it's not the first run, load np arrays versions of data, save time
 if os.path.exists('X_eurosat.npy') and os.path.exists('y_eurosat.npy'):
+    print("a\n")
     X = np.load('X_eurosat.npy')
     y = np.load('y_eurosat.npy')
+    print("b\n")
 
 else:
     # Path to EuroSAT_RGB dataset
-    data_dir = 'EuroSAT_RGB'
+    data_dir = r'C:\Users\ayele\Documents\ML_2025\ML_project\EuroSAT_RGB'
 
     images = []
     labels = [] # will be a list the size of all dataset - for i - images[i] is of category labels[i]
@@ -55,7 +57,7 @@ else:
                 labels.append(label)
 
     X = np.array(images)
-    le = LabelEncoder() # it actually changes labels from string to sequential numbers, easier for models to work with
+    le = LabelEncoder() # it changes labels from string to sequential numbers, easier for models to work with
     y = le.fit_transform(labels)
 
     # save processed arrays - images and labels as np arrays (to save loading time every run)
@@ -68,7 +70,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 def logisticRegression(X_train, X_test, y_train, y_test):
     from sklearn.linear_model import LogisticRegression
-    model = LogisticRegression(multi_class='multinomial', solver='lbfgs')
+    model = LogisticRegression(multi_class='multinomial', solver='lbfgs')# different solver
     model.fit(X_train, y_train)
 
     # Evaluate the model
@@ -78,7 +80,7 @@ def logisticRegression(X_train, X_test, y_train, y_test):
 
 def randomForest(X_train, X_test, y_train, y_test):
     from sklearn.ensemble import RandomForestClassifier
-    model = RandomForestClassifier(n_estimators=100, random_state=42) # Using 100 trees
+    model = RandomForestClassifier(n_estimators=100, random_state=42 ) # Using 100 trees
     model.fit(X_train, y_train)
 
     # Evaluate the model
@@ -123,17 +125,17 @@ def KNN(X_train, X_test, y_train, y_test):
 #     X_test_cnn = X_test.reshape(-1, 64, 64, 3)
 #     y_train_cnn = to_categorical(y_train, num_classes=len(np.unique(y_train)))
 #     y_test_cnn = to_categorical(y_test, num_classes=len(np.unique(y_test)))
-#     model = Sequential()
-#     model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(64, 64, 3)))
-#     model.add(MaxPooling2D((2, 2)))
-#     model.add(Conv2D(64, (3, 3), activation='relu'))
-#     model.add(MaxPooling2D((2, 2)))
-#     model.add(Conv2D(128, (3, 3), activation='relu'))
-#     model.add(MaxPooling2D((2, 2)))
-#     model.add(Flatten())
-#     model.add(Dense(128, activation='relu'))
-#     model.add(Dropout(0.5))
-#     model.add(Dense(len(np.unique(y_train)), activation='softmax'))
+#     model = Sequential([
+#     model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(64, 64, 3))),
+#     model.add(MaxPooling2D((2, 2))),
+#     model.add(Conv2D(64, (3, 3), activation='relu')),
+#     model.add(MaxPooling2D((2, 2))),
+#     model.add(Conv2D(128, (3, 3), activation='relu')),
+#     model.add(MaxPooling2D((2, 2))),
+#     model.add(Flatten()),
+#     model.add(Dense(128, activation='relu')),
+#     model.add(Dropout(0.5)),
+#     model.add(Dense(len(np.unique(y_train)), activation='softmax'))])
 #     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 #     model.fit(X_train_cnn, y_train_cnn, epochs=10, batch_size=32, validation_data=(X_test_cnn, y_test_cnn))
 #     y_pred_cnn = model.predict(X_test_cnn)
@@ -144,4 +146,8 @@ def KNN(X_train, X_test, y_train, y_test):
 
 
 # running models
-logisticRegression(X_train, X_test, y_train, y_test) # first run - Model accuracy: 38.85%
+# logisticRegression(X_train, X_test, y_train, y_test) # first run - Model accuracy: 38.85%
+# randomForest(X_train, X_test, y_train, y_test) # first run - Model accuracy: 69.04%
+# SVM(X_train, X_test, y_train, y_test) ran over 30 minutes, didn't finish
+# KNN(X_train, X_test, y_train, y_test) # first run - Model accuracy: 34.44%
+# CNN(X_train, X_test, y_train, y_test) # problem with downloading tensorflow or pytorch, didn't run yet
