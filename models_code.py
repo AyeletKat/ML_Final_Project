@@ -70,7 +70,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 def logisticRegression(X_train, X_test, y_train, y_test):
     from sklearn.linear_model import LogisticRegression
-    model = LogisticRegression(multi_class='multinomial', solver='lbfgs')# different solver
+    model = LogisticRegression(solver='lbfgs', max_iter = 300)# different solver
     model.fit(X_train, y_train)
 
     # Evaluate the model
@@ -80,32 +80,65 @@ def logisticRegression(X_train, X_test, y_train, y_test):
 
 def randomForest(X_train, X_test, y_train, y_test):
     from sklearn.ensemble import RandomForestClassifier
-    model = RandomForestClassifier(n_estimators=100, random_state=42 ) # Using 100 trees
+    from datetime import datetime
+    model = RandomForestClassifier(n_estimators=200, random_state=42 ) # Using 70/100 trees
     model.fit(X_train, y_train)
 
     # Evaluate the model
     accuracy = model.score(X_test, y_test)
+    with open('svm_output.txt', 'a') as f:
+        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - RM 200 TREES Model accuracy: {accuracy * 100:.2f}%\n")
     print(f"Model accuracy: {accuracy * 100:.2f}%")
 
 
 def SVM(X_train, X_test, y_train, y_test):
-    from sklearn.svm import SVC
-    model = SVC(kernel='linear', random_state=42) # Using linear kernel - try other as changes tryed
+    from sklearn.svm import LinearSVC  # Using LinearSVC for linear kernel
+    from sklearn.decomposition import PCA
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+    from datetime import datetime
+    iter=300
+    svm = LinearSVC(random_state=42, max_iter=iter ) # Using linear kernel - try other as changes tryed
+    scaler = StandardScaler()  # Standardize features by removing the mean and scaling to unit variance
+    comps = 0.9
+    pca = PCA(n_components=comps)  # Reduce dimensionality to speed up training
+    X_train = pca.fit_transform(X_train)
+    X_test = pca.transform(X_test)
+    model = make_pipeline(scaler, pca, svm)  # Create a pipeline with PCA and SVM
     model.fit(X_train, y_train)
 
     # Evaluate the model
     accuracy = model.score(X_test, y_test)
-    print(f"Model accuracy: {accuracy * 100:.2f}%")
+    # print output to svm_output.txt file
+    with open('svm_output.txt', 'a') as f:
+        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - SVM Model, {comps} pca, {iter} iters, accuracy: {accuracy * 100:.2f}%\n")
+    print(f"SVM {comps} PCA, {iter} iters, Model accuracy: {accuracy * 100:.2f}%")
 
 
 def KNN(X_train, X_test, y_train, y_test):
     from sklearn.neighbors import KNeighborsClassifier
-    model = KNeighborsClassifier(n_neighbors=5)  # Using 5 neighbors - try other as changes tryed
+    model = KNeighborsClassifier(n_neighbors=13)  # Using 3/5 neighbors - try other as changes tryed
     model.fit(X_train, y_train)
 
     # Evaluate the model
     accuracy = model.score(X_test, y_test)
     print(f"Model accuracy: {accuracy * 100:.2f}%")
+
+def adaboost(X_train, X_test, y_train, y_test):
+    from sklearn.ensemble import AdaBoostClassifier
+    from sklearn.tree import DecisionTreeClassifier
+    from datetime import datetime
+    model = AdaBoostClassifier(
+        estimator=DecisionTreeClassifier(max_depth=1),
+        n_estimators=10,
+        random_state=42)
+    model.fit(X_train, y_train)  # y_train can have multiple classes
+    # Using a simple decision tree as the base estimator
+    # Evaluate the model
+    accuracy = model.score(X_test, y_test)
+    with open('adaboost_output.txt', 'a') as f:
+        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - AdaBoost Model 10 trees accuracy: {accuracy * 100:.2f}%\n")
+    print(f"AdaBoost Model accuracy: {accuracy * 100:.2f}%")
 
 
 # check carefully and correct wrong places
@@ -147,7 +180,9 @@ def KNN(X_train, X_test, y_train, y_test):
 
 # running models
 # logisticRegression(X_train, X_test, y_train, y_test) # first run - Model accuracy: 38.85%
-# randomForest(X_train, X_test, y_train, y_test) # first run - Model accuracy: 69.04%
-# SVM(X_train, X_test, y_train, y_test) ran over 30 minutes, didn't finish
+# randomForest(X_train, X_test, y_train, y_test) # first run 100 trees - Model accuracy: 69.04%
+SVM(X_train, X_test, y_train, y_test) # ran over 30 minutes, didn't finish
 # KNN(X_train, X_test, y_train, y_test) # first run - Model accuracy: 34.44%
 # CNN(X_train, X_test, y_train, y_test) # problem with downloading tensorflow or pytorch, didn't run yet
+# adaboost(X_train, X_test, y_train, y_test) # first run 10 trees- Model accuracy: 
+# print("hi")
