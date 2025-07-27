@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.log
+*.csv
+*.h5
+*.pt
+*.pth
+EuroSAT_RGB/
+wandb/
+data/
