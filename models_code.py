@@ -70,12 +70,23 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 def logisticRegression(X_train, X_test, y_train, y_test):
     from sklearn.linear_model import LogisticRegression
-    model = LogisticRegression(solver='lbfgs', max_iter = 300)# different solver
+    iter = 300  # max_iter for convergence
+    solverr = 'saga'  # Using 'lbfgs' solver, can try others like 'saga' `newton-cg`
+    # add pca to speed up training
+    from sklearn.decomposition import PCA
+    pca = PCA(n_components=100)  # Reduce dimensionality to speed up training
+    X_train = pca.fit_transform(X_train)
+    X_test = pca.transform(X_test)
+    # Create and train the model
+    model = LogisticRegression(solver=solverr, max_iter = iter)# different solver
+    print(f"LR + 100 pca Model {solverr} solver, {iter} iterations started")
     model.fit(X_train, y_train)
 
     # Evaluate the model
-    accuracy = model.score(X_test, y_test)
-    print(f"Model accuracy: {accuracy * 100:.2f}%")
+    train_accuracy = model.score(X_train, y_train)
+    test_accuracy = model.score(X_test, y_test)
+    print(f"LR Model {solverr} solver, {iter} iterations train accuracy: {train_accuracy * 100:.2f}%")
+    print(f"LR Model {solverr} solver, {iter} iterations test accuracy: {test_accuracy * 100:.2f}%")
 
 
 def randomForest(X_train, X_test, y_train, y_test):
@@ -101,6 +112,8 @@ def SVM(X_train, X_test, y_train, y_test):
     svm = LinearSVC(random_state=42, max_iter=iter ) # Using linear kernel - try other as changes tryed
     scaler = StandardScaler()  # Standardize features by removing the mean and scaling to unit variance
     comps = 0.9
+    print("SVM Model, {iter} iters, {comps} comps started")
+
     pca = PCA(n_components=comps)  # Reduce dimensionality to speed up training
     X_train = pca.fit_transform(X_train)
     X_test = pca.transform(X_test)
@@ -128,16 +141,20 @@ def adaboost(X_train, X_test, y_train, y_test):
     from sklearn.ensemble import AdaBoostClassifier
     from sklearn.tree import DecisionTreeClassifier
     from datetime import datetime
+    depth = 3  # max depth of the decision tree
+    n_trees=50
+    print("AdaBoost Model, {n_trees} trees, {depth} depth started")
+
+    # avg_training_loss = 0.0  # Initialize average training loss
     model = AdaBoostClassifier(
-        estimator=DecisionTreeClassifier(max_depth=1),
-        n_estimators=10,
+        estimator=DecisionTreeClassifier(max_depth=depth),
+        n_estimators=n_trees,  # Number of trees in the ensemble
         random_state=42)
     model.fit(X_train, y_train)  # y_train can have multiple classes
-    # Using a simple decision tree as the base estimator
     # Evaluate the model
     accuracy = model.score(X_test, y_test)
     with open('adaboost_output.txt', 'a') as f:
-        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - AdaBoost Model 10 trees accuracy: {accuracy * 100:.2f}%\n")
+        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - AdaBoost Model, {n_trees} trees, {depth} depth, accuracy: {accuracy * 100:.2f}%\n")
     print(f"AdaBoost Model accuracy: {accuracy * 100:.2f}%")
 
 
@@ -179,10 +196,10 @@ def adaboost(X_train, X_test, y_train, y_test):
 
 
 # running models
-# logisticRegression(X_train, X_test, y_train, y_test) # first run - Model accuracy: 38.85%
+logisticRegression(X_train, X_test, y_train, y_test) # first run - Model accuracy: 38.85%
 # randomForest(X_train, X_test, y_train, y_test) # first run 100 trees - Model accuracy: 69.04%
-SVM(X_train, X_test, y_train, y_test) # ran over 30 minutes, didn't finish
+# SVM(X_train, X_test, y_train, y_test) # ran over 30 minutes, didn't finish
 # KNN(X_train, X_test, y_train, y_test) # first run - Model accuracy: 34.44%
 # CNN(X_train, X_test, y_train, y_test) # problem with downloading tensorflow or pytorch, didn't run yet
-# adaboost(X_train, X_test, y_train, y_test) # first run 10 trees- Model accuracy: 
+# adaboost(X_train, X_test, y_train, y_test) # first run 10 trees- Model accuracy: 25.50
 # print("hi")
