@@ -13,3 +13,5 @@ __pycache__/
 EuroSAT_RGB/
 wandb/
 data/
+checkpoints/
+# conf_mats/

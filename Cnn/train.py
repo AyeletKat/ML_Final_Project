@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-# -------------------------------------------------------------------
-#  EuroSAT CNN trainer — confusion-matrix PNG + CSV summary + W&B
-# -------------------------------------------------------------------
 import argparse, os, random, csv, numpy as np, torch, torch.nn as nn, torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torchvision.datasets import EuroSAT
@@ -9,10 +5,24 @@ from torchvision import transforms
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import wandb
+from pathlib import Path
 
 # ---------------- reproducibility -----------------------------------
 SEED = 42
 random.seed(SEED); np.random.seed(SEED); torch.manual_seed(SEED)
+
+# ---------------- directories ---------------------------------------
+# Base directory is the directory containing this script
+BASE_DIR = Path(__file__).parent.absolute()
+DATA_DIR = BASE_DIR / "data"
+CHECKPOINTS_DIR = BASE_DIR / "checkpoints"
+CONF_MATS_DIR = BASE_DIR / "conf_mats"
+CSV_PATH = BASE_DIR / "experiment_log.csv"
+
+# Create directories if they don't exist
+os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(CHECKPOINTS_DIR, exist_ok=True)
+os.makedirs(CONF_MATS_DIR, exist_ok=True)
 
 # ---------------- model ---------------------------------------------
 class SimpleCNN(nn.Module):
@@ -49,7 +59,7 @@ def make_loaders(batch, workers=4):
         transforms.RandomVerticalFlip(),
         transforms.ToTensor()
     ])
-    full = EuroSAT(root="data", download=True, transform=tf_eval)
+    full = EuroSAT(root=DATA_DIR, download=True, transform=tf_eval)
     n_tr, n_val = int(0.70*len(full)), int(0.15*len(full))
     n_te = len(full) - n_tr - n_val
     tr, va, te = random_split(full, [n_tr, n_val, n_te],
@@ -100,7 +110,7 @@ def save_conf_mat_png(y_true, y_pred, class_names, title, out_path):
     fig.savefig(out_path)
     plt.close(fig)
 
-def append_csv(row, path="experiment_log.csv"):
+def append_csv(row, path=CSV_PATH):
     exists = os.path.isfile(path)
     with open(path, "a", newline="") as f:
         writer = csv.writer(f)
@@ -193,8 +203,8 @@ def main():
         # early-stop
         if val_loss < best:
             best, stale = val_loss, 0
-            os.makedirs("checkpoints", exist_ok=True)
-            torch.save(model.state_dict(), "checkpoints/best.pt")
+            checkpoint_path = CHECKPOINTS_DIR / "best.pt"
+            torch.save(model.state_dict(), checkpoint_path)
         else:
             stale += 1
             if stale >= args.patience:
@@ -206,9 +216,9 @@ def main():
     wandb.log({"epoch": epoch, "test/loss": te_loss, "test/acc": te_acc})
 
     title = f"{run_name} | bs={args.batch}, lr={args.lr:g}, bn={args.bn}"
-    png_path = f"conf_mats/{run_name}.png"
+    png_path = CONF_MATS_DIR / f"{run_name}.png"
     save_conf_mat_png(y_true, y_pred, class_names, title, png_path)
-    wandb.save(png_path)  # upload image artefact
+    wandb.save(str(png_path))  # upload image artefact
 
     append_csv([run_name, args.lr, args.batch, args.bn, te_loss, te_acc])
 

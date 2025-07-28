@@ -1,4 +1,3 @@
-"""Download EuroSAT, apply transforms, return DataLoaders."""
 from pathlib import Path
 from typing import Tuple
 
@@ -12,6 +11,10 @@ from utils import set_seed
 IMG_SIZE = 64            # EuroSAT is 64×64 already
 N_WORKERS = 4
 
+# Base directory is the directory containing this script
+BASE_DIR = Path(__file__).parent.absolute()
+DATA_DIR = BASE_DIR / "data"
+
 # Basic transforms -----------------------------------------------------------
 train_tf = transforms.Compose([
     transforms.RandomHorizontalFlip(),
@@ -22,7 +25,7 @@ train_tf = transforms.Compose([
 val_tf = transforms.ToTensor()
 
 def get_loaders(
-    root: str | Path = "./data",
+    root: str | Path = DATA_DIR,
     batch_size: int = 64,
     val_fraction: float = 0.15,
     test_fraction: float = 0.15,
@@ -30,6 +33,11 @@ def get_loaders(
 ) -> Tuple[DataLoader, DataLoader, DataLoader]:
     """Return train/val/test DataLoaders with the requested split sizes."""
     set_seed(seed)
+
+    # Ensure data directory exists
+    if isinstance(root, str):
+        root = Path(root)
+    root.mkdir(exist_ok=True, parents=True)
 
     full_ds = EuroSAT(root=root, download=True, transform=val_tf)
     n_total = len(full_ds)

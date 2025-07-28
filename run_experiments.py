@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-# -------------------------------------------------------------------
-#  Grid launcher for EuroSAT experiments (LR × Batch × BN)
-# -------------------------------------------------------------------
 import itertools, subprocess, pathlib, sys
 
 learning_rates = [1e-3, 5e-4, 1e-4]
@@ -34,7 +30,7 @@ def run_default():
     subprocess.run(cmd, check=True)
 
 def main():
-    # Run with default parameters only
+    # Run with default parameters only what you run if you start write python train.py without changing nothing
     run_default()
     
     for lr, bs, bn in itertools.product(learning_rates, batch_sizes, batch_norms):
