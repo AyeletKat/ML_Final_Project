@@ -13,7 +13,7 @@ import os
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from PIL import Image  # Use PIL instead of tensorflow
+from PIL import Image
 
 # our own image loading functions
 def load_img(img_path, target_size=None):
@@ -38,7 +38,7 @@ if os.path.exists('X_eurosat.npy') and os.path.exists('y_eurosat.npy'):
 
 else:
     # Path to EuroSAT_RGB dataset
-    data_dir = r'C:\Users\ayele\Documents\ML_2025\ML_project\EuroSAT_RGB'
+    data_dir = r'C:\Users\ayele\Documents\ML_2025\ML_project\EuroSAT_RGB' # change to your path (where you downloaded the dataset)
 
     images = []
     labels = [] # will be a list the size of all dataset - for i - images[i] is of category labels[i]
