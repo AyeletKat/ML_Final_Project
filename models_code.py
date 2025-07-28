@@ -55,6 +55,27 @@ else:
                 img_array = img_to_array(img)
                 images.append(img_array.flatten())
                 labels.append(label)
+    # plot data distribution
+    # import matplotlib.pyplot as plt
+    # from collections import Counter
+    # Plot data distribution with counts on top of bars and a blue-green colormap
+    # label_counts = Counter(labels)
+    # plt.figure(figsize=(10, 5))
+    # bars = plt.bar(label_counts.keys(), label_counts.values(), color=plt.cm.viridis(np.linspace(0, 1, len(label_counts))))
+    # plt.xlabel('Class Label')
+    # plt.ylabel('Number of Samples')
+    # plt.title('Class Distribution in EuroSAT Dataset')
+    # plt.xticks(rotation=45)
+    # # Add counts on top of bars
+    # for bar in bars:
+    #     height = bar.get_height()
+    #     plt.annotate(f'{int(height)}',
+    #                  xy=(bar.get_x() + bar.get_width() / 2, height),
+    #                  xytext=(0, 3),  # 3 points vertical offset
+    #                  textcoords="offset points",
+    #                  ha='center', va='bottom')
+    # plt.tight_layout()
+    # plt.show()
 
     X = np.array(images)
     le = LabelEncoder() # it changes labels from string to sequential numbers, easier for models to work with
@@ -64,22 +85,41 @@ else:
     np.save('X_eurosat.npy', X)
     np.save('y_eurosat.npy', y)
 
+# def data_statistics(X, labels):
+#     """Print basic statistics about the dataset."""
+#     print(f"Number of samples: {X.shape[0]}")
+#     print(f"Number of features: {X.shape[1]}")
+#     print(f"Number of classes: {len(np.unique(y))}")
+#     print("Class distribution:")
+#     unique, counts = np.unique(y, return_counts=True)
+#     class_distribution = dict(zip(unique, counts))
+#     for class_label, count in class_distribution.items():
+#         print(f"Class {class_label}: {count} samples")
+#     # plot class distribution
+#     import matplotlib.pyplot as plt
+#     plt.figure(figsize=(10, 5))
+#     plt.bar(class_distribution.keys(), class_distribution.values())
+#     plt.xlabel('Class Label')
+#     plt.ylabel('Number of Samples')
+#     plt.title('Class Distribution')
+#     plt.xticks(rotation=45)
+#     plt.show()
 # splitting data into training and testing sets, here 80% for training and 20% for testing - - try other as changes tryed
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 
 def logisticRegression(X_train, X_test, y_train, y_test):
     from sklearn.linear_model import LogisticRegression
-    iter = 300  # max_iter for convergence
-    solverr = 'saga'  # Using 'lbfgs' solver, can try others like 'saga' `newton-cg`
+    iter = 200  # max_iter for convergence
+    solverr = 'newton-cg'  # Using 'lbfgs' solver, can try others like 'saga' `newton-cg`
     # add pca to speed up training
-    from sklearn.decomposition import PCA
-    pca = PCA(n_components=100)  # Reduce dimensionality to speed up training
-    X_train = pca.fit_transform(X_train)
-    X_test = pca.transform(X_test)
+    # from sklearn.decomposition import PCA
+    # pca = PCA(n_components=100)  # Reduce dimensionality to speed up training
+    # X_train = pca.fit_transform(X_train)
+    # X_test = pca.transform(X_test)
     # Create and train the model
     model = LogisticRegression(solver=solverr, max_iter = iter)# different solver
-    print(f"LR + 100 pca Model {solverr} solver, {iter} iterations started")
+    print(f"LR regular Model {solverr} solver, {iter} iterations started")
     model.fit(X_train, y_train)
 
     # Evaluate the model
@@ -92,7 +132,14 @@ def logisticRegression(X_train, X_test, y_train, y_test):
 def randomForest(X_train, X_test, y_train, y_test):
     from sklearn.ensemble import RandomForestClassifier
     from datetime import datetime
-    model = RandomForestClassifier(n_estimators=200, random_state=42 ) # Using 70/100 trees
+    # add pca
+    from sklearn.decomposition import PCA
+    pca = PCA(n_components=50)  # Reduce dimensionality to speed up training
+    X_train = pca.fit_transform(X_train)
+    X_test = pca.transform(X_test)
+    n_trees = 400  # Number of trees in the forest
+    print("RM pca {n_trees} TREES Model started")
+    model = RandomForestClassifier(n_estimators=n_trees, random_state=42 )
     model.fit(X_train, y_train)
 
     # Evaluate the model
@@ -111,7 +158,7 @@ def SVM(X_train, X_test, y_train, y_test):
     iter=300
     svm = LinearSVC(random_state=42, max_iter=iter ) # Using linear kernel - try other as changes tryed
     scaler = StandardScaler()  # Standardize features by removing the mean and scaling to unit variance
-    comps = 0.9
+    comps =100
     print("SVM Model, {iter} iters, {comps} comps started")
 
     pca = PCA(n_components=comps)  # Reduce dimensionality to speed up training
@@ -141,6 +188,7 @@ def adaboost(X_train, X_test, y_train, y_test):
     from sklearn.ensemble import AdaBoostClassifier
     from sklearn.tree import DecisionTreeClassifier
     from datetime import datetime
+    from collections import Counter
     depth = 3  # max depth of the decision tree
     n_trees=50
     print("AdaBoost Model, {n_trees} trees, {depth} depth started")
@@ -196,6 +244,8 @@ def adaboost(X_train, X_test, y_train, y_test):
 
 
 # running models
+# data_statistics(X, y)  # Print dataset statistics
+
 logisticRegression(X_train, X_test, y_train, y_test) # first run - Model accuracy: 38.85%
 # randomForest(X_train, X_test, y_train, y_test) # first run 100 trees - Model accuracy: 69.04%
 # SVM(X_train, X_test, y_train, y_test) # ran over 30 minutes, didn't finish
