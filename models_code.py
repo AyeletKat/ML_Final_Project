@@ -7,9 +7,7 @@
 # (use different number of epochs in CNN)
 # use different proportion of train/test split
 
-# check and write CNN 
-# get rid of image loading separate functions?
-# add: dimensionality reduction, visualizations, statistics per class, ovetfitting check, data augmentation\masking?
+# add: dimensionality reduction, visualizations, statistics per class, overfitting check, data augmentation/masking?
 
 import os
 import numpy as np
@@ -55,27 +53,6 @@ else:
                 img_array = img_to_array(img)
                 images.append(img_array.flatten())
                 labels.append(label)
-    # plot data distribution
-    # import matplotlib.pyplot as plt
-    # from collections import Counter
-    # Plot data distribution with counts on top of bars and a blue-green colormap
-    # label_counts = Counter(labels)
-    # plt.figure(figsize=(10, 5))
-    # bars = plt.bar(label_counts.keys(), label_counts.values(), color=plt.cm.viridis(np.linspace(0, 1, len(label_counts))))
-    # plt.xlabel('Class Label')
-    # plt.ylabel('Number of Samples')
-    # plt.title('Class Distribution in EuroSAT Dataset')
-    # plt.xticks(rotation=45)
-    # # Add counts on top of bars
-    # for bar in bars:
-    #     height = bar.get_height()
-    #     plt.annotate(f'{int(height)}',
-    #                  xy=(bar.get_x() + bar.get_width() / 2, height),
-    #                  xytext=(0, 3),  # 3 points vertical offset
-    #                  textcoords="offset points",
-    #                  ha='center', va='bottom')
-    # plt.tight_layout()
-    # plt.show()
 
     X = np.array(images)
     le = LabelEncoder() # it changes labels from string to sequential numbers, easier for models to work with
@@ -84,27 +61,6 @@ else:
     # save processed arrays - images and labels as np arrays (to save loading time every run)
     np.save('X_eurosat.npy', X)
     np.save('y_eurosat.npy', y)
-
-# def data_statistics(X, labels):
-#     """Print basic statistics about the dataset."""
-#     print(f"Number of samples: {X.shape[0]}")
-#     print(f"Number of features: {X.shape[1]}")
-#     print(f"Number of classes: {len(np.unique(y))}")
-#     print("Class distribution:")
-#     unique, counts = np.unique(y, return_counts=True)
-#     class_distribution = dict(zip(unique, counts))
-#     for class_label, count in class_distribution.items():
-#         print(f"Class {class_label}: {count} samples")
-#     # plot class distribution
-#     import matplotlib.pyplot as plt
-#     plt.figure(figsize=(10, 5))
-#     plt.bar(class_distribution.keys(), class_distribution.values())
-#     plt.xlabel('Class Label')
-#     plt.ylabel('Number of Samples')
-#     plt.title('Class Distribution')
-#     plt.xticks(rotation=45)
-#     plt.show()
-# splitting data into training and testing sets, here 80% for training and 20% for testing - - try other as changes tryed
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 
@@ -206,42 +162,6 @@ def adaboost(X_train, X_test, y_train, y_test):
     print(f"AdaBoost Model accuracy: {accuracy * 100:.2f}%")
 
 
-# check carefully and correct wrong places
-# def CNN(X_train, X_test, y_train, y_test):
-#     import tensorflow as tf
-#     from tensorflow.keras.models import Sequential
-#     from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
-#     from tensorflow.keras.utils import to_categorical
-#     from tensorflow.keras.preprocessing.image import ImageDataGenerator
-#     from sklearn.metrics import accuracy_score
-#     from sklearn.model_selection import train_test_split
-#     from tensorflow.keras.preprocessing.image import img_to_array, load_img
-#     from tensorflow.keras.utils import to_categorical
-
-#     # Reshape the data for CNN
-#     X_train_cnn = X_train.reshape(-1, 64, 64, 3)  # Assuming RGB images
-#     X_test_cnn = X_test.reshape(-1, 64, 64, 3)
-#     y_train_cnn = to_categorical(y_train, num_classes=len(np.unique(y_train)))
-#     y_test_cnn = to_categorical(y_test, num_classes=len(np.unique(y_test)))
-#     model = Sequential([
-#     model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(64, 64, 3))),
-#     model.add(MaxPooling2D((2, 2))),
-#     model.add(Conv2D(64, (3, 3), activation='relu')),
-#     model.add(MaxPooling2D((2, 2))),
-#     model.add(Conv2D(128, (3, 3), activation='relu')),
-#     model.add(MaxPooling2D((2, 2))),
-#     model.add(Flatten()),
-#     model.add(Dense(128, activation='relu')),
-#     model.add(Dropout(0.5)),
-#     model.add(Dense(len(np.unique(y_train)), activation='softmax'))])
-#     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-#     model.fit(X_train_cnn, y_train_cnn, epochs=10, batch_size=32, validation_data=(X_test_cnn, y_test_cnn))
-#     y_pred_cnn = model.predict(X_test_cnn)
-#     y_pred_cnn = np.argmax(y_pred_cnn, axis=1)
-#     accuracy_cnn = accuracy_score(y_test, y_pred_cnn)
-#     print(f"CNN Model accuracy: {accuracy_cnn * 100:.2f}%")
-
-
 
 # running models
 # data_statistics(X, y)  # Print dataset statistics
@@ -250,6 +170,4 @@ logisticRegression(X_train, X_test, y_train, y_test) # first run - Model accurac
 # randomForest(X_train, X_test, y_train, y_test) # first run 100 trees - Model accuracy: 69.04%
 # SVM(X_train, X_test, y_train, y_test) # ran over 30 minutes, didn't finish
 # KNN(X_train, X_test, y_train, y_test) # first run - Model accuracy: 34.44%
-# CNN(X_train, X_test, y_train, y_test) # problem with downloading tensorflow or pytorch, didn't run yet
 # adaboost(X_train, X_test, y_train, y_test) # first run 10 trees- Model accuracy: 25.50
-# print("hi")
