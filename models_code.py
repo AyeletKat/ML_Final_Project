@@ -1,15 +1,18 @@
-# to add in the future - use not only accuracy. 
-# using different number of trees in random forest
-# using different kernal in svm
-# using different number of neighbors in knn
-# use other max_iter num in logistic regression (first run: 100 iter reached max, didn't converge, lbfgs, 38.85% accuracy)
-# use different solver - logistic regression
-# (use different number of epochs in CNN)
-# use different proportion of train/test split
+"""
+This is the Final Project for the Machine Learning course at Ariel University, 2025.
+It includes various machine learning models applied to the EuroSAT RGB version dataset.
+The models include:
+- Logistic Regression
+- Random Forest
+- Support Vector Machine (SVM)
+- K-Nearest Neighbors (KNN)
+- AdaBoost
+- Convolutional Neural Network (CNN) (implemented in a separate folder)
 
-# check and write CNN 
-# get rid of image loading separate functions?
-# add: dimensionality reduction, visualizations, statistics per class, ovetfitting check, data augmentation\masking?
+At the end you can also see fine tuning of resnet18
+
+Enjoy!
+"""
 
 import os
 import numpy as np
@@ -40,7 +43,7 @@ if os.path.exists('X_eurosat.npy') and os.path.exists('y_eurosat.npy'):
 
 else:
     # Path to EuroSAT_RGB dataset
-    data_dir = r'C:\Users\ayele\Documents\ML_2025\ML_project\EuroSAT_RGB'
+    data_dir = r'C:\Users\ayele\Documents\ML_2025\ML_project\EuroSAT_RGB' # change to your path
 
     images = []
     labels = [] # will be a list the size of all dataset - for i - images[i] is of category labels[i]
@@ -101,25 +104,6 @@ else:
     np.save('X_eurosat.npy', X)
     np.save('y_eurosat.npy', y)
 
-# def data_statistics(X, labels):
-#     """Print basic statistics about the dataset."""
-#     print(f"Number of samples: {X.shape[0]}")
-#     print(f"Number of features: {X.shape[1]}")
-#     print(f"Number of classes: {len(np.unique(y))}")
-#     print("Class distribution:")
-#     unique, counts = np.unique(y, return_counts=True)
-#     class_distribution = dict(zip(unique, counts))
-#     for class_label, count in class_distribution.items():
-#         print(f"Class {class_label}: {count} samples")
-#     # plot class distribution
-#     import matplotlib.pyplot as plt
-#     plt.figure(figsize=(10, 5))
-#     plt.bar(class_distribution.keys(), class_distribution.values())
-#     plt.xlabel('Class Label')
-#     plt.ylabel('Number of Samples')
-#     plt.title('Class Distribution')
-#     plt.xticks(rotation=45)
-#     plt.show()
 # splitting data into training and testing sets, here 80% for training and 20% for testing - - try other as changes tryed
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -133,12 +117,11 @@ def logisticRegression(X_train, X_test, y_train, y_test):
     X_train = pca.fit_transform(X_train)
     X_test = pca.transform(X_test)
 
-    # Create and train the model
-    model = LogisticRegression(solver=solverr, max_iter = iter)# different solver
+    model = LogisticRegression(solver=solverr, max_iter = iter)
     print(f"LR regular Model {solverr} solver, {iter} iterations started")
     model.fit(X_train, y_train)
 
-    # Evaluate the model
+    # evaluate
     train_accuracy = model.score(X_train, y_train)
     test_accuracy = model.score(X_test, y_test)
     print(f"LR Model {solverr} solver, {iter} iterations train accuracy: {train_accuracy * 100:.2f}%")
@@ -167,7 +150,7 @@ def randomForest(X_train, X_test, y_train, y_test):
     model = RandomForestClassifier(n_estimators=n_trees, random_state=42 )
     model.fit(X_train, y_train)
 
-    # Evaluate the model
+    # evaluate
     accuracy = model.score(X_test, y_test)
     with open('svm_output.txt', 'a') as f:
         f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - RM 200 TREES Model accuracy: {accuracy * 100:.2f}%\n")
@@ -202,7 +185,7 @@ def SVM(X_train, X_test, y_train, y_test):
     model = make_pipeline(scaler, pca, svm)  # Create a pipeline with PCA and SVM
     model.fit(X_train, y_train)
 
-    # Evaluate the model
+    # evaluate
     accuracy = model.score(X_test, y_test)
     # print output to svm_output.txt file
     with open('svm_output.txt', 'a') as f:
@@ -221,10 +204,15 @@ def SVM(X_train, X_test, y_train, y_test):
 
 def KNN(X_train, X_test, y_train, y_test):
     from sklearn.neighbors import KNeighborsClassifier
-    model = KNeighborsClassifier(n_neighbors=5)  # Using 3/5 neighbors - try other as changes tryed
+    from sklearn.decomposition import PCA # add pca
+    pca = PCA(n_components=50)  # Reduce dimensionality to speed up training - here improved results a lot
+    X_train = pca.fit_transform(X_train)
+    X_test = pca.transform(X_test)
+    
+    model = KNeighborsClassifier(n_neighbors=5)  # Using 3/5/7/10/13 neighbors - try others | 5 best here
     model.fit(X_train, y_train)
 
-    # Evaluate the model
+    # evaluate
     accuracy = model.score(X_test, y_test)
     print(f"Model accuracy: {accuracy * 100:.2f}%")
     # plot confusion matrix
@@ -251,14 +239,12 @@ def adaboost(X_train, X_test, y_train, y_test):
     pca = PCA(n_components=85)  # Reduce dimensionality to speed up training
     X_train = pca.fit_transform(X_train)
     X_test = pca.transform(X_test)
-    # Create and train the model
-    # Using DecisionTreeClassifier as the base estimator
+    # using Decision Tree Classifier as the base estimator
     model = AdaBoostClassifier(
         estimator=DecisionTreeClassifier(max_depth=depth),
         n_estimators=n_trees,  # Number of trees in the ensemble
         random_state=42)
-    model.fit(X_train, y_train)  # y_train can have multiple classes
-    # Evaluate the model
+    model.fit(X_train, y_train)
     # print loss and accuracy for train and test sets
     train_accuracy = model.score(X_train, y_train)
     test_accuracy = model.score(X_test, y_test)
@@ -281,50 +267,17 @@ def adaboost(X_train, X_test, y_train, y_test):
 
 
 
-# running models
-# data_statistics(X, y)  # Print dataset statistics
+# RUNNING MODELS!
 
 # logisticRegression(X_train, X_test, y_train, y_test) # first run - Model accuracy: 38.85%
 # randomForest(X_train, X_test, y_train, y_test) # first run 100 trees - Model accuracy: 69.04%
 # SVM(X_train, X_test, y_train, y_test) # ran over 30 minutes, didn't finish
-# KNN(X_train, X_test, y_train, y_test) # first run - Model accuracy: 34.44%
-# CNN(X_train, X_test, y_train, y_test) # problem with downloading tensorflow or pytorch, didn't run yet
+# KNN(X_train, X_test, y_train, y_test) # first run - Model accuracy: 34.44% \ with pca 49+
 # adaboost(X_train, X_test, y_train, y_test) # first run 10 trees- Model accuracy: 25.50
-# print("hi")
 
-
-import matplotlib.pyplot as plt
-
-# # Example data
-# # Number of trees (estimators)
-# trees = [70, 100, 200, 70, 100, 200, 300, 400, 70, 100, 300, 400, 200]
-
-# # Number of PCA components (None = no PCA, replaced '-' with 0)
-# pca = [0, 0, 0, 50, 50, 50, 50, 50, 100, 100, 100, 100, 200]
-
-# # Accuracy
-# accuracy = [68.43, 69.04, 69.56, 64.57, 65.15, 66.81, 66.63, 66.76, 64.94, 65.20, 67.13, 68.00, 66.30]
-# Max iterations (max_iter) - SVM
-# max_iter = [100, 100, 200, 300, 200, 200, 300, 300]
-
-# # PCA components
-# pca =      [50,  100, 200, 300, 50,  100, 100, 50]
-
-# # Accuracy
-# accuracy = [38.94, 39.13, 39.07, 38.63, 38.93, 39.24, 39.02, 38.85]
-
-# plt.scatter(max_iter, pca, c=accuracy, cmap='Reds', s=100)  # s is size of dots
-
-# # plt.scatter(trees, pca, c=accuracy, cmap='Reds', s=100)  # s is size of dots
-# plt.colorbar(label='accuracy (color scale)')
-# plt.xlabel("trees Axis")
-# plt.ylabel("pca Axis")
-# plt.title("SVM Trees vs. PCA Scatter Plot (Accuracy as Color)")
-# # plt.title("RF Trees vs. PCA Scatter Plot (Accuracy as Color)")
-# plt.grid(True)
-# plt.show()
 
 # running resnet on the dataset - finetuning a pre-trained reset18
+
 # import torch
 # import torchvision
 # from torchvision import datasets, transforms
@@ -384,25 +337,13 @@ import matplotlib.pyplot as plt
 #     accuracy = accuracy_score(all_labels, all_preds)  # Compute accuracy
 #     print(f"Validation Accuracy: {accuracy * 100:.2f}%")
 #     return model  # Return the trained model
-# # model = train_resnet()  # Call the function to train the ResNet model
-# # # save the model
-# # import torch
-# # torch.save(model.state_dict(), 'resnet_eurosat.pth')  # Save the model state dictionary
-# # # load the model
-# # model = resnet18()  # Initialize a new ResNet-18 model
-# # model.fc = nn.Linear(model.fc.in_features, 10)  # Modify the final layer
-# # model.load_state_dict(torch.load('resnet_eurosat.pth'))  # Load the saved state
-# # model.eval()  # Set the model to evaluation mode
-# # print("ResNet model loaded and ready for inference.")
-
-# # Recreate model architecture
-# model = resnet18()
-# model.fc = nn.Linear(model.fc.in_features, 10)
-
-# # Load the trained weights
-# model.load_state_dict(torch.load('resnet_eurosat.pth'))
-
-# # Set to evaluation mode
-# model.eval()
-
-# print("✅ ResNet model loaded and ready for inference.")
+# model = train_resnet()  # Call the function to train the ResNet model
+# # save the model
+# import torch
+# torch.save(model.state_dict(), 'resnet_eurosat.pth')  # Save the model state dictionary
+# # load the model
+# model = resnet18()  # Initialize a new ResNet-18 model
+# model.fc = nn.Linear(model.fc.in_features, 10)  # Modify the final layer
+# model.load_state_dict(torch.load('resnet_eurosat.pth'))  # Load the saved state
+# model.eval()  # Set the model to evaluation mode
+# print("ResNet model loaded and ready for inference.")
